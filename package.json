@@ -1,0 +1,39 @@
+{
+  "name": "bare-web-kit",
+  "version": "0.0.0",
+  "description": "WebKit bindings for Bare",
+  "exports": {
+    "./package": "./package.json",
+    ".": "./index.js"
+  },
+  "files": [
+    "index.js",
+    "CMakeLists.txt",
+    "lib",
+    "prebuilds"
+  ],
+  "addon": true,
+  "scripts": {
+    "test": "prettier . --check"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/holepunchto/bare-web-kit.git"
+  },
+  "author": "Holepunch",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/holepunchto/bare-web-kit/issues"
+  },
+  "homepage": "https://github.com/holepunchto/bare-web-kit#readme",
+  "dependencies": {
+    "bare-events": "^2.8.2",
+    "require-asset": "^1.1.0"
+  },
+  "devDependencies": {
+    "brittle": "^3.18.0",
+    "cmake-bare": "^1.6.5",
+    "prettier": "^3.4.1",
+    "prettier-config-holepunch": "^2.0.0"
+  }
+}
