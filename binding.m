@@ -21,6 +21,8 @@ bare_web_kit_exports(js_env_t *env, js_value_t *exports) {
   }
 
   V("webViewInit", bare_web_kit_web_view_init)
+  V("webViewInspectable", bare_web_kit_web_view_inspectable)
+  V("webViewLoadRequest", bare_web_kit_web_view_load_request)
   V("webViewLoadHTMLString", bare_web_kit_web_view_load_html_string)
   V("webViewReload", bare_web_kit_web_view_reload)
   V("webViewReloadFromOrigin", bare_web_kit_web_view_reload_from_origin)

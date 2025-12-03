@@ -83,6 +83,75 @@ bare_web_kit_web_view_init(js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
+bare_web_kit_web_view_inspectable(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 2;
+  js_value_t *argv[2];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 2);
+
+  void *handle;
+  err = js_get_value_external(env, argv[0], &handle);
+  assert(err == 0);
+
+  js_value_t *result = NULL;
+
+  @autoreleasepool {
+    BareWebView *web_view = (__bridge BareWebView *) handle;
+
+    if (argc == 1) {
+      err = js_get_boolean(env, web_view.inspectable, &result);
+      assert(err == 0);
+    } else {
+      bool inspectable;
+      err = js_get_value_bool(env, argv[1], &inspectable);
+      assert(err == 0);
+
+      web_view.inspectable = inspectable;
+    }
+  }
+
+  return result;
+}
+
+static js_value_t *
+bare_web_kit_web_view_load_request(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 2;
+  js_value_t *argv[2];
+
+  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  assert(err == 0);
+
+  assert(argc == 2);
+
+  void *handle;
+  err = js_get_value_external(env, argv[0], &handle);
+  assert(err == 0);
+
+  size_t url_len;
+  err = js_get_value_string_utf8(env, argv[1], NULL, 0, &url_len);
+  assert(err == 0);
+
+  utf8_t *url = malloc(url_len);
+  err = js_get_value_string_utf8(env, argv[1], url, url_len, NULL);
+  assert(err == 0);
+
+  @autoreleasepool {
+    BareWebView *web_view = (__bridge BareWebView *) handle;
+
+    [web_view loadRequest:[[NSURLRequest alloc] initWithURL:bare_web_kit__to_url_no_copy(url, url_len)]];
+  }
+
+  return NULL;
+}
+
+static js_value_t *
 bare_web_kit_web_view_load_html_string(js_env_t *env, js_callback_info_t *info) {
   int err;
 
