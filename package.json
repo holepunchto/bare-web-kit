@@ -8,6 +8,8 @@
   },
   "files": [
     "index.js",
+    "binding.m",
+    "binding.js",
     "CMakeLists.txt",
     "lib",
     "prebuilds"
