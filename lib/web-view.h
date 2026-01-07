@@ -104,22 +104,14 @@ bare_web_kit_web_view_inspectable(js_env_t *env, js_callback_info_t *info) {
     BareWebView *web_view = (__bridge BareWebView *) handle;
 
     if (argc == 1) {
-      bool inspectable = false;
-
-      if (@available(macOS 13.3, iOS 16.4, *)) {
-        inspectable = web_view.inspectable;
-      }
-
-      err = js_get_boolean(env, inspectable, &result);
+      err = js_get_boolean(env, web_view.inspectable, &result);
       assert(err == 0);
     } else {
       bool inspectable;
       err = js_get_value_bool(env, argv[1], &inspectable);
       assert(err == 0);
 
-      if (@available(macOS 13.3, iOS 16.4, *)) {
-        web_view.inspectable = inspectable;
-      }
+      web_view.inspectable = inspectable;
     }
   }
 
