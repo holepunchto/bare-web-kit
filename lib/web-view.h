@@ -29,7 +29,6 @@
       didReceiveScriptMessage:(WKScriptMessage *)message {
 }
 
-#if TARGET_OS_OSX
 - (void)webView:(WKWebView *)webView
     runOpenPanelWithParameters:(WKOpenPanelParameters *)parameters
     initiatedByFrame:(WKFrameInfo *)frame
