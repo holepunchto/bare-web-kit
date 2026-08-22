@@ -10,6 +10,7 @@
 @public
   js_env_t *env;
   js_ref_t *ctx;
+  js_ref_t *on_message;
 }
 
 @end
@@ -19,6 +20,9 @@
 - (void)dealloc {
   int err;
 
+  err = js_delete_reference(env, on_message);
+  assert(err == 0);
+
   err = js_delete_reference(env, ctx);
   assert(err == 0);
 
@@ -27,6 +31,35 @@
 
 - (void)userContentController:(WKUserContentController *)userContentController
       didReceiveScriptMessage:(WKScriptMessage *)message {
+  int err;
+
+  // PROTOTYPE: the question this branch exists to answer - which thread WebKit
+  // hands us, and whether entering JS from here is safe on the Bare loop.
+  fprintf(stderr, "[handler] main thread: %s\n", [NSThread isMainThread] ? "yes" : "no");
+
+  js_handle_scope_t *scope;
+  err = js_open_handle_scope(env, &scope);
+  assert(err == 0);
+
+  js_value_t *receiver;
+  err = js_get_reference_value(env, ctx, &receiver);
+  assert(err == 0);
+
+  js_value_t *callback;
+  err = js_get_reference_value(env, on_message, &callback);
+  assert(err == 0);
+
+  NSString *body = [message.body isKindOfClass:[NSString class]] ? message.body : [message.body description];
+
+  js_value_t *argv[1];
+  err = js_create_string_utf8(env, (const utf8_t *) [body UTF8String], -1, &argv[0]);
+  assert(err == 0);
+
+  err = js_call_function(env, receiver, callback, 1, argv, NULL);
+  (void) err;
+
+  err = js_close_handle_scope(env, scope);
+  assert(err == 0);
 }
 
 @end
@@ -35,13 +68,13 @@ static js_value_t *
 bare_web_kit_web_view_init(js_env_t *env, js_callback_info_t *info) {
   int err;
 
-  size_t argc = 5;
-  js_value_t *argv[5];
+  size_t argc = 6;
+  js_value_t *argv[6];
 
   err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
   assert(err == 0);
 
-  assert(argc == 5);
+  assert(argc == 6);
 
   double x;
   err = js_get_value_double(env, argv[0], &x);
@@ -70,12 +103,20 @@ bare_web_kit_web_view_init(js_env_t *env, js_callback_info_t *info) {
 
     handle.UIDelegate = handle;
 
+    // PROTOTYPE: one hardcoded handler name, no frame or origin filtering, and
+    // the content controller retains us - all of which the real contract has to
+    // deal with. Enough to answer the threading question.
+    [configuration.userContentController addScriptMessageHandler:handle name:@"bare"];
+
     err = js_create_external(env, (void *) CFBridgingRetain(handle), bare_web_kit__on_bridged_release, NULL, &result);
     assert(err == 0);
 
     handle->env = env;
 
     err = js_create_reference(env, argv[4], 1, &handle->ctx);
+    assert(err == 0);
+
+    err = js_create_reference(env, argv[5], 1, &handle->on_message);
     assert(err == 0);
   }
 

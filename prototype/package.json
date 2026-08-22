@@ -1,0 +1,12 @@
+{
+  "name": "webview-bridge-prototype",
+  "private": true,
+  "version": "0.0.0",
+  "dependencies": {
+    "bare-app-kit": "^0.2.1",
+    "bare-web-kit": "file:/Users/bala/github/holepunchto/bare-web-kit"
+  },
+  "devDependencies": {
+    "bare-build": "^1.0.4"
+  }
+}
