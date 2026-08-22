@@ -16,7 +16,13 @@ function note(line) {
 
 note('[js] start')
 
-const window = new Window({ x: 100, y: 100, width: 480, height: 320, styleMask: Window.STYLE_MASK.TITLED | Window.STYLE_MASK.CLOSABLE | Window.STYLE_MASK.RESIZABLE })
+const window = new Window({
+  x: 100,
+  y: 100,
+  width: 480,
+  height: 320,
+  styleMask: Window.STYLE_MASK.TITLED | Window.STYLE_MASK.CLOSABLE | Window.STYLE_MASK.RESIZABLE
+})
 const webView = new WebView({ x: 0, y: 0, width: 480, height: 320 })
 
 webView.on('message', (data) => {
