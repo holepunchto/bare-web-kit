@@ -38,7 +38,8 @@ bare_web_kit_web_view_init(js_env_t *env, js_callback_info_t *info) {
   size_t argc = 5;
   js_value_t *argv[5];
 
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  bare_foundation_registry_t *registry;
+  err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &registry);
   assert(err == 0);
 
   assert(argc == 5);
@@ -62,20 +63,19 @@ bare_web_kit_web_view_init(js_env_t *env, js_callback_info_t *info) {
   js_value_t *result;
 
   @autoreleasepool {
-    WKWebViewConfiguration *configuration = [[WKWebViewConfiguration alloc] init];
+    WKWebViewConfiguration *configuration = [[[WKWebViewConfiguration alloc] init] autorelease];
 
-    BareWebView *handle = [[BareWebView alloc]
+    BareWebView *handle = [[[BareWebView alloc]
       initWithFrame:CGRectMake(x, y, width, height)
-      configuration:configuration];
+      configuration:configuration] autorelease];
 
     handle.UIDelegate = handle;
 
-    err = js_create_external(env, (void *) CFBridgingRetain(handle), bare_web_kit__on_bridged_release, NULL, &result);
-    assert(err == 0);
+    result = bare_foundation_bridge(env, registry, handle);
 
     handle->env = env;
 
-    err = js_create_reference(env, argv[4], 1, &handle->ctx);
+    err = js_create_reference(env, argv[4], 0, &handle->ctx);
     assert(err == 0);
   }
 
@@ -89,14 +89,14 @@ bare_web_kit_web_view_inspectable(js_env_t *env, js_callback_info_t *info) {
   size_t argc = 2;
   js_value_t *argv[2];
 
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  bare_foundation_registry_t *registry;
+  err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &registry);
   assert(err == 0);
 
   assert(argc == 1 || argc == 2);
 
   void *handle;
-  err = js_get_value_external(env, argv[0], &handle);
-  assert(err == 0);
+  if (bare_foundation_read_tag(env, registry, argv[0], "handle", &handle) < 0) return NULL;
 
   js_value_t *result = NULL;
 
@@ -106,7 +106,7 @@ bare_web_kit_web_view_inspectable(js_env_t *env, js_callback_info_t *info) {
     if (argc == 1) {
       bool inspectable = false;
 
-      if ([web_view respondsToSelector:@selector(isInspectable)]) {
+      if (@available(macOS 13.3, iOS 16.4, *)) {
         inspectable = web_view.inspectable;
       }
 
@@ -117,7 +117,7 @@ bare_web_kit_web_view_inspectable(js_env_t *env, js_callback_info_t *info) {
       err = js_get_value_bool(env, argv[1], &inspectable);
       assert(err == 0);
 
-      if ([web_view respondsToSelector:@selector(setInspectable:)]) {
+      if (@available(macOS 13.3, iOS 16.4, *)) {
         web_view.inspectable = inspectable;
       }
     }
@@ -127,20 +127,83 @@ bare_web_kit_web_view_inspectable(js_env_t *env, js_callback_info_t *info) {
 }
 
 static js_value_t *
+bare_web_kit_web_view_frame(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 5;
+  js_value_t *argv[5];
+
+  bare_foundation_registry_t *registry;
+  err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &registry);
+  assert(err == 0);
+
+  assert(argc == 1 || argc == 5);
+
+  void *handle;
+  if (bare_foundation_read_tag(env, registry, argv[0], "handle", &handle) < 0) return NULL;
+
+  js_value_t *result = NULL;
+
+  @autoreleasepool {
+    BareWebView *web_view = (__bridge BareWebView *) handle;
+
+    if (argc == 1) {
+      result = bare_web_kit__from_rect(env, web_view.frame);
+    } else {
+      double x, y, width, height;
+
+      if (!bare_web_kit__read_double(env, argv[1], "x", &x)) return NULL;
+      if (!bare_web_kit__read_double(env, argv[2], "y", &y)) return NULL;
+      if (!bare_web_kit__read_double(env, argv[3], "width", &width)) return NULL;
+      if (!bare_web_kit__read_double(env, argv[4], "height", &height)) return NULL;
+
+      web_view.frame = CGRectMake(x, y, width, height);
+    }
+  }
+
+  return result;
+}
+
+static js_value_t *
+bare_web_kit_web_view_remove_from_superview(js_env_t *env, js_callback_info_t *info) {
+  int err;
+
+  size_t argc = 1;
+  js_value_t *argv[1];
+
+  bare_foundation_registry_t *registry;
+  err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &registry);
+  assert(err == 0);
+
+  assert(argc == 1);
+
+  void *handle;
+  if (bare_foundation_read_tag(env, registry, argv[0], "handle", &handle) < 0) return NULL;
+
+  @autoreleasepool {
+    BareWebView *web_view = (__bridge BareWebView *) handle;
+
+    [web_view removeFromSuperview];
+  }
+
+  return NULL;
+}
+
+static js_value_t *
 bare_web_kit_web_view_load_request(js_env_t *env, js_callback_info_t *info) {
   int err;
 
   size_t argc = 2;
   js_value_t *argv[2];
 
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  bare_foundation_registry_t *registry;
+  err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &registry);
   assert(err == 0);
 
   assert(argc == 2);
 
   void *handle;
-  err = js_get_value_external(env, argv[0], &handle);
-  assert(err == 0);
+  if (bare_foundation_read_tag(env, registry, argv[0], "handle", &handle) < 0) return NULL;
 
   size_t url_len;
   err = js_get_value_string_utf8(env, argv[1], NULL, 0, &url_len);
@@ -153,7 +216,7 @@ bare_web_kit_web_view_load_request(js_env_t *env, js_callback_info_t *info) {
   @autoreleasepool {
     BareWebView *web_view = (__bridge BareWebView *) handle;
 
-    [web_view loadRequest:[[NSURLRequest alloc] initWithURL:bare_web_kit__to_url_no_copy(url, url_len)]];
+    [web_view loadRequest:[NSURLRequest requestWithURL:bare_web_kit__to_url_no_copy(url, url_len)]];
   }
 
   return NULL;
@@ -166,14 +229,14 @@ bare_web_kit_web_view_load_html_string(js_env_t *env, js_callback_info_t *info) 
   size_t argc = 3;
   js_value_t *argv[3];
 
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  bare_foundation_registry_t *registry;
+  err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &registry);
   assert(err == 0);
 
   assert(argc == 3);
 
   void *handle;
-  err = js_get_value_external(env, argv[0], &handle);
-  assert(err == 0);
+  if (bare_foundation_read_tag(env, registry, argv[0], "handle", &handle) < 0) return NULL;
 
   size_t html_len;
   err = js_get_value_string_utf8(env, argv[1], NULL, 0, &html_len);
@@ -208,14 +271,14 @@ bare_web_kit_web_view_reload(js_env_t *env, js_callback_info_t *info) {
   size_t argc = 1;
   js_value_t *argv[1];
 
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  bare_foundation_registry_t *registry;
+  err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &registry);
   assert(err == 0);
 
   assert(argc == 1);
 
   void *handle;
-  err = js_get_value_external(env, argv[0], &handle);
-  assert(err == 0);
+  if (bare_foundation_read_tag(env, registry, argv[0], "handle", &handle) < 0) return NULL;
 
   @autoreleasepool {
     BareWebView *web_view = (__bridge BareWebView *) handle;
@@ -233,14 +296,14 @@ bare_web_kit_web_view_reload_from_origin(js_env_t *env, js_callback_info_t *info
   size_t argc = 1;
   js_value_t *argv[1];
 
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  bare_foundation_registry_t *registry;
+  err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &registry);
   assert(err == 0);
 
   assert(argc == 1);
 
   void *handle;
-  err = js_get_value_external(env, argv[0], &handle);
-  assert(err == 0);
+  if (bare_foundation_read_tag(env, registry, argv[0], "handle", &handle) < 0) return NULL;
 
   @autoreleasepool {
     BareWebView *web_view = (__bridge BareWebView *) handle;
@@ -258,14 +321,14 @@ bare_web_kit_web_view_stop_loading(js_env_t *env, js_callback_info_t *info) {
   size_t argc = 1;
   js_value_t *argv[1];
 
-  err = js_get_callback_info(env, info, &argc, argv, NULL, NULL);
+  bare_foundation_registry_t *registry;
+  err = js_get_callback_info(env, info, &argc, argv, NULL, (void **) &registry);
   assert(err == 0);
 
   assert(argc == 1);
 
   void *handle;
-  err = js_get_value_external(env, argv[0], &handle);
-  assert(err == 0);
+  if (bare_foundation_read_tag(env, registry, argv[0], "handle", &handle) < 0) return NULL;
 
   @autoreleasepool {
     BareWebView *web_view = (__bridge BareWebView *) handle;
