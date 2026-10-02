@@ -29,6 +29,19 @@
       didReceiveScriptMessage:(WKScriptMessage *)message {
 }
 
+- (void)webView:(WKWebView *)webView
+    runOpenPanelWithParameters:(WKOpenPanelParameters *)parameters
+    initiatedByFrame:(WKFrameInfo *)frame
+    completionHandler:(void (^)(NSArray<NSURL *> *))completionHandler {
+  NSOpenPanel *panel = [NSOpenPanel openPanel];
+  panel.allowsMultipleSelection = parameters.allowsMultipleSelection;
+
+  [panel beginWithCompletionHandler:^(NSModalResponse result) {
+    completionHandler(result == NSModalResponseOK ? panel.URLs : nil);
+  }];
+}
+#endif
+
 @end
 
 static js_value_t *
